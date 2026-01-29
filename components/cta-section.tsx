@@ -82,15 +82,19 @@ export function CTASection() {
               {!showPix ? (
                 <>
                   {/* CTA Button */}
-                  <Button
-                    size="lg"
-                    className="w-full text-lg py-6 h-auto font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-                    onClick={() => setShowPix(true)}
-                  >
-                    <Zap className="w-5 h-5 mr-2" />
-                    Quero Mudar de Vida Agora
-                    <ArrowRight className="w-5 h-5 ml-2" />
-                  </Button>
+                  <a href="/register" className="block">
+                    <Button
+                      size="lg"
+                      className="w-full text-lg py-6 h-auto font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                    >
+                      <Zap className="w-5 h-5 mr-2" />
+                      Quero Mudar de Vida Agora
+                      <ArrowRight className="w-5 h-5 ml-2" />
+                    </Button>
+                  </a>
+                  <p className="text-center text-xs text-muted-foreground mt-3">
+                    ou <a href="/login" className="text-primary hover:underline font-medium">faça login se já tem conta</a>
+                  </p>
                 </>
               ) : (
                 <>
@@ -148,14 +152,14 @@ export function CTASection() {
 
                     <div className="text-center space-y-2">
                       <p className="text-xs text-muted-foreground">
-                        Após o pagamento, clique no botão abaixo para acessar
+                        Após o pagamento, acesse seu dashboard
                       </p>
                       <a
-                        href="/acesso"
+                        href="/dashboard"
                         className="inline-flex items-center gap-2 text-sm text-primary hover:underline font-medium"
                       >
                         <CheckCircle2 className="w-4 h-4" />
-                        Já paguei, quero meu acesso
+                        Ir para meu painel
                       </a>
                     </div>
                   </div>
