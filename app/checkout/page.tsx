@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, CheckCircle2, Copy, Home } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Copy, Home, Loader2 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -16,12 +16,47 @@ export default function CheckoutPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [copied, setCopied] = useState(false);
+  const [checkingPayment, setCheckingPayment] = useState(false);
+  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
+  const [autoCheckInterval, setAutoCheckInterval] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login');
     }
   }, [user, loading, router]);
+
+  // Verificar pagamento automaticamente a cada 3 segundos
+  useEffect(() => {
+    if (paymentConfirmed) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const response = await fetch('/api/payments/check', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pixCode: PIX_CODE })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.isPaid) {
+            setPaymentConfirmed(true);
+            if (interval) clearInterval(interval);
+            // Redirecionar após 3 segundos
+            setTimeout(() => {
+              router.push('/dashboard');
+            }, 3000);
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao verificar pagamento:', err);
+      }
+    }, 3000);
+
+    setAutoCheckInterval(interval);
+    return () => clearInterval(interval);
+  }, [paymentConfirmed, router]);
 
   const handleCopyPix = async () => {
     try {
@@ -30,6 +65,52 @@ export default function CheckoutPage() {
       setTimeout(() => setCopied(false), 3000);
     } catch (err) {
       console.error('Failed to copy PIX code');
+    }
+  };
+
+  const handleCheckPayment = async () => {
+    setCheckingPayment(true);
+    try {
+      const response = await fetch('/api/payments/check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pixCode: PIX_CODE })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.isPaid) {
+          setPaymentConfirmed(true);
+        }
+      }
+    } catch (err) {
+      console.error('Erro ao verificar pagamento:', err);
+    } finally {
+      setCheckingPayment(false);
+    }
+  };
+
+  // Simular pagamento (apenas desenvolvimento)
+  const handleSimulatePayment = async () => {
+    setCheckingPayment(true);
+    try {
+      const response = await fetch('/api/payments/simulate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          pixCode: PIX_CODE,
+          amount: 12
+        })
+      });
+
+      if (response.ok) {
+        setPaymentConfirmed(true);
+      }
+    } catch (err) {
+      console.error('Erro ao simular pagamento:', err);
+    } finally {
+      setCheckingPayment(false);
     }
   };
 
@@ -60,11 +141,32 @@ export default function CheckoutPage() {
 
       {/* Main Content */}
       <main className="max-w-2xl mx-auto px-4 py-8">
+        {/* Payment Confirmed Message */}
+        {paymentConfirmed && (
+          <div className="mb-6 p-4 bg-green-50 border-2 border-green-500 rounded-lg animate-pulse">
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="w-8 h-8 text-green-600 flex-shrink-0" />
+              <div>
+                <p className="font-bold text-green-900 text-lg">✓ Pagamento Confirmado!</p>
+                <p className="text-sm text-green-800">Redirecionando para seu dashboard...</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid gap-6">
           {/* Order Summary */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl">Resumo do Pedido</CardTitle>
+              <CardTitle className="text-2xl flex items-center gap-2">
+                Resumo do Pedido
+                {paymentConfirmed && (
+                  <Badge className="bg-green-600 gap-1">
+                    <CheckCircle2 className="w-3 h-3" />
+                    Pago
+                  </Badge>
+                )}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-3">
@@ -89,60 +191,102 @@ export default function CheckoutPage() {
             </CardContent>
           </Card>
 
-          {/* Payment Method */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Método de Pagamento</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="text-center space-y-4">
-                <h3 className="font-semibold text-lg">Pague via PIX</h3>
-                <p className="text-gray-600">Escaneie o QR Code abaixo ou copie o código PIX</p>
+          {!paymentConfirmed && (
+            <>
+              {/* Payment Method */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Método de Pagamento</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="text-center space-y-4">
+                    <h3 className="font-semibold text-lg">Pague via PIX</h3>
+                    <p className="text-gray-600">Escaneie o QR Code abaixo ou copie o código PIX</p>
 
-                {/* QR Code */}
-                <div className="flex justify-center">
-                  <div className="bg-white p-4 rounded-xl border border-gray-300">
-                    <QRCodeSVG
-                      value={PIX_CODE}
-                      size={200}
-                      level="H"
-                      includeMargin={false}
-                      bgColor="white"
-                      fgColor="black"
-                    />
+                    {/* QR Code */}
+                    <div className="flex justify-center">
+                      <div className="bg-white p-4 rounded-xl border border-gray-300">
+                        <QRCodeSVG
+                          value={PIX_CODE}
+                          size={200}
+                          level="H"
+                          includeMargin={false}
+                          bgColor="white"
+                          fgColor="black"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Copy PIX Code */}
+                    <div className="space-y-3">
+                      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <p className="text-xs text-gray-600 font-mono break-all leading-relaxed mb-2">
+                          {PIX_CODE}
+                        </p>
+                      </div>
+                      <Button
+                        onClick={handleCopyPix}
+                        className="w-full gap-2 bg-blue-600 hover:bg-blue-700"
+                      >
+                        <Copy className="w-4 h-4" />
+                        {copied ? 'Código copiado!' : 'Copiar código PIX'}
+                      </Button>
+                    </div>
                   </div>
-                </div>
 
-                {/* Copy PIX Code */}
-                <div className="space-y-3">
-                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                    <p className="text-xs text-gray-600 font-mono break-all leading-relaxed mb-2">
-                      {PIX_CODE}
-                    </p>
+                  {/* Instructions */}
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <h4 className="font-semibold text-green-900 mb-2">Como funciona:</h4>
+                    <ol className="text-sm text-green-800 space-y-1">
+                      <li>1. Abra seu banco ou app de PIX</li>
+                      <li>2. Escolha pagar via PIX</li>
+                      <li>3. Escaneie o QR Code ou cole o código</li>
+                      <li>4. Confirme o pagamento</li>
+                      <li>5. Seu acesso será ativado automaticamente!</li>
+                    </ol>
                   </div>
-                  <Button
-                    onClick={handleCopyPix}
-                    className="w-full gap-2 bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Copy className="w-4 h-4" />
-                    {copied ? 'Código copiado!' : 'Copiar código PIX'}
-                  </Button>
-                </div>
-              </div>
 
-              {/* Instructions */}
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h4 className="font-semibold text-green-900 mb-2">Como funciona:</h4>
-                <ol className="text-sm text-green-800 space-y-1">
-                  <li>1. Abra seu banco ou app de PIX</li>
-                  <li>2. Escolha pagar via PIX</li>
-                  <li>3. Escaneie o QR Code ou cole o código</li>
-                  <li>4. Confirme o pagamento</li>
-                  <li>5. Seu acesso será ativado automaticamente!</li>
-                </ol>
-              </div>
-            </CardContent>
-          </Card>
+                  {/* Check Payment Button */}
+                  <div className="space-y-2">
+                    <Button
+                      onClick={handleCheckPayment}
+                      variant="outline"
+                      className="w-full gap-2"
+                      disabled={checkingPayment}
+                    >
+                      {checkingPayment ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Verificando...
+                        </>
+                      ) : (
+                        'Verificar Pagamento'
+                      )}
+                    </Button>
+                    
+                    {/* Simulate Payment Button (Dev Only) */}
+                    {process.env.NODE_ENV === 'development' && (
+                      <Button
+                        onClick={handleSimulatePayment}
+                        variant="outline"
+                        className="w-full gap-2 text-amber-600 border-amber-200 hover:bg-amber-50"
+                        disabled={checkingPayment}
+                      >
+                        {checkingPayment ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Simulando...
+                          </>
+                        ) : (
+                          '🧪 Simular Pagamento (Dev)'
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
 
           {/* Confirmation Message */}
           <Card className="bg-green-50 border-green-200">
