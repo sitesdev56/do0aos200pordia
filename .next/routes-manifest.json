@@ -58,6 +58,24 @@
       "namedRegex": "^/api/auth/register(?:/)?$"
     },
     {
+      "page": "/api/payments/check",
+      "regex": "^/api/payments/check(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/payments/check(?:/)?$"
+    },
+    {
+      "page": "/api/payments/simulate",
+      "regex": "^/api/payments/simulate(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/payments/simulate(?:/)?$"
+    },
+    {
+      "page": "/api/webhooks/payment",
+      "regex": "^/api/webhooks/payment(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/webhooks/payment(?:/)?$"
+    },
+    {
       "page": "/checkout",
       "regex": "^/checkout(?:/)?$",
       "routeKeys": {},

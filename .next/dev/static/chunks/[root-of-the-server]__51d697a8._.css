@@ -185,6 +185,9 @@
     --color-red-500: #fb2c36;
     --color-red-600: #e40014;
     --color-red-700: #bf000f;
+    --color-amber-50: #fffbeb;
+    --color-amber-200: #fee685;
+    --color-amber-600: #dd7400;
     --color-yellow-400: #fac800;
     --color-yellow-500: #edb200;
     --color-green-50: #f0fdf4;
@@ -280,6 +283,9 @@
       --color-red-500: lab(55.4814% 75.0732 48.8528);
       --color-red-600: lab(48.4493% 77.4328 61.5452);
       --color-red-700: lab(40.4273% 67.2623 53.7441);
+      --color-amber-50: lab(98.6252% -.635922 8.42309);
+      --color-amber-200: lab(91.7203% -.505269 49.9084);
+      --color-amber-600: lab(60.3514% 40.5624 87.1228);
       --color-yellow-400: lab(83.2664% 8.65132 106.895);
       --color-yellow-500: lab(76.3898% 14.5258 98.4589);
       --color-green-50: lab(98.1563% -5.60117 2.75915);
@@ -1904,6 +1910,10 @@
     border-color: var(--color-border);
   }
 
+  .border-amber-200 {
+    border-color: var(--color-amber-200);
+  }
+
   .border-background\/10 {
     border-color: var(--background);
   }
@@ -1950,6 +1960,10 @@
 
   .border-green-200 {
     border-color: var(--color-green-200);
+  }
+
+  .border-green-500 {
+    border-color: var(--color-green-500);
   }
 
   .border-green-500\/30 {
@@ -2613,6 +2627,10 @@
 
   .text-accent-foreground {
     color: var(--accent-foreground);
+  }
+
+  .text-amber-600 {
+    color: var(--color-amber-600);
   }
 
   .text-background {
@@ -3523,6 +3541,12 @@
   @media (hover: hover) {
     .hover\:bg-accent:hover {
       background-color: var(--accent);
+    }
+  }
+
+  @media (hover: hover) {
+    .hover\:bg-amber-50:hover {
+      background-color: var(--color-amber-50);
     }
   }
 
