@@ -1,8 +1,6 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
   "/api/auth/register/route": "app/api/auth/register/route.js",
-  "/api/payments/check/route": "app/api/payments/check/route.js",
-  "/api/payments/simulate/route": "app/api/payments/simulate/route.js",
   "/checkout/page": "app/checkout/page.js",
   "/dashboard/page": "app/dashboard/page.js",
   "/login/page": "app/login/page.js",
